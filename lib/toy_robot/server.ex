@@ -3,6 +3,11 @@ defmodule ToyRobot.Server do
   @behaviour ToyRobot.Behaviour
 
   @impl ToyRobot.Behaviour
+  def get do
+    __MODULE__
+  end
+
+  @impl ToyRobot.Behaviour
   def report(robot) do
     GenServer.call(robot, :report)
   end
@@ -27,39 +32,39 @@ defmodule ToyRobot.Server do
     GenServer.call(robot, :right)
   end
 
-  def start_link do
+  def start_link(_) do
     GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
 
   @impl GenServer
   def init(_opts) do
-    {:ok, %ToyRobot{}}
+    {:ok, %ToyRobot.Simple{}}
   end
 
   @impl GenServer
   def handle_call(:report, _from, state) do
     state
-    |> ToyRobot.report
+    |> ToyRobot.Simple.report
     |> do_reply
   end
   def handle_call({:place, x, y, f}, _from, state) do
     state
-    |> ToyRobot.place(x, y, f)
+    |> ToyRobot.Simple.place(x, y, f)
     |> do_reply
   end
   def handle_call(:move, _from, state) do
     state
-    |> ToyRobot.move
+    |> ToyRobot.Simple.move
     |> do_reply
   end
   def handle_call(:left, _from, state) do
     state
-    |> ToyRobot.left
+    |> ToyRobot.Simple.left
     |> do_reply
   end
   def handle_call(:right, _from, state) do
     state
-    |> ToyRobot.right
+    |> ToyRobot.Simple.right
     |> do_reply
   end
   def handle_call(_, _, state) do

@@ -8,8 +8,8 @@ defmodule ToyRobot.Application do
   def start(_type, _args) do
     # List all child processes to be supervised
     children = [
-      # Starts a worker by calling: ToyRobot.Worker.start_link(arg)
-      # {ToyRobot.Worker, arg},
+      # Must be started when using this implementation
+      ToyRobot.Server
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
