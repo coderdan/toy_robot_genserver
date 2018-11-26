@@ -9,7 +9,7 @@ defmodule ToyRobot.Application do
     # List all child processes to be supervised
     children = [
       # Must be started when using this implementation
-      ToyRobot.Server
+      #ToyRobot.Server
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
