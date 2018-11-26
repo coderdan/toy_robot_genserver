@@ -1,81 +1,48 @@
 defmodule ToyRobot do
-  use GenServer
+  @behaviour ToyRobot.Behaviour
+  defstruct [:x, :y, :f]
 
-  defguard is_grid(x) when is_integer(x)
+  defguard is_grid(x) when is_integer(x) and x in 0..5
   defguard is_compass(f) when f in ["N", "S", "E", "W"]
   defguard is_place(x, y, f) when is_grid(x) and is_grid(y) and is_compass(f)
-  defguard can_move?(x) when x > 0 and x < 5
 
-  @directions ["N", "E", "S", "W"]
-
-  def start_link do
-    GenServer.start_link(__MODULE__, [], name: __MODULE__)
+  @impl true
+  def report(%ToyRobot{} = robot) do
+    robot
   end
 
-  def init(_opts) do
-    {:ok, :unplaced}
+  @impl true
+  def place(%ToyRobot{} = robot, x, y, f) when is_place(x, y, f) do
+    %{robot | x: x, y: y, f: f}
   end
+  def place(robot, _, _, _), do: robot
 
-  def report do
-    GenServer.call(__MODULE__, :report)
-  end
+  @impl true
+  def left(%ToyRobot{f: "N"} = robot), do: %{robot | f: "W"}
+  def left(%ToyRobot{f: "E"} = robot), do: %{robot | f: "N"}
+  def left(%ToyRobot{f: "S"} = robot), do: %{robot | f: "E"}
+  def left(%ToyRobot{f: "W"} = robot), do: %{robot | f: "S"}
+  def left(r), do: r
 
-  def place(x, y, f) do
-    GenServer.call(__MODULE__, {:place, x, y, f})
-  end
+  @impl ToyRobot.Behaviour
+  def right(%ToyRobot{f: "N"} = robot), do: %{robot | f: "E"}
+  def right(%ToyRobot{f: "E"} = robot), do: %{robot | f: "S"}
+  def right(%ToyRobot{f: "S"} = robot), do: %{robot | f: "W"}
+  def right(%ToyRobot{f: "W"} = robot), do: %{robot | f: "N"}
+  def right(r), do: r
 
-  def move do
-    GenServer.call(__MODULE__, :move)
+  @impl true
+  def move(%ToyRobot{y: y, f: "N"} = robot) when y < 5 do
+    %{robot | y: y + 1}
   end
-
-  def left do
-    GenServer.call(__MODULE__, :left)
+  def move(%ToyRobot{y: y, f: "S"} = robot) when y > 0 do
+    %{robot | y: y - 1}
   end
-
-  def right do
-    GenServer.call(__MODULE__, :right)
+  def move(%ToyRobot{x: x, f: "E"} = robot) when x < 5 do
+    %{robot | x: x + 1}
   end
-
-  def handle_call(:report, _from, {x, y, [f | _]} = state) do
-    {:reply, {x, y, f}, state}
+  def move(%ToyRobot{x: x, f: "W"} = robot) when x > 0 do
+    %{robot | x: x - 1}
   end
-  def handle_call({:place, x, y, f}, _from, _state) when is_place(x, y, f) do
-    reply_ok({x, y, set_direction(f)})
-  end
-  def handle_call(:move, _from, {x, y, ["N" | _] = f}) when y <= 5 do
-    reply_ok({x, y + 1, f})
-  end
-  def handle_call(:move, _from, {x, y, ["S" | _] = f}) when y >= 0 do
-    reply_ok({x, y - 1, f})
-  end
-  def handle_call(:move, _from, {x, y, ["W" | _] = f}) when x >= 0 do
-    reply_ok({x - 1, y, f})
-  end
-  def handle_call(:move, _from, {x, y, ["E" | _] = f}) when x <= 5 do
-    reply_ok({x + 1, y, f})
-  end
-  def handle_call(:left, _from, {x, y, f}) do
-    reply_ok({x, y, r_left(f)})
-  end
-  def handle_call(:right, _from, {x, y, f}) do
-    reply_ok({x, y, r_right(f)})
-  end
-  def handle_call(_, _, state) do
-    {:reply, :error, state}
-  end
-
-  defp reply_ok(state), do: {:reply, :ok, state}
-
-  defp r_right([curr | rest]) do
-    rest ++ [curr]
-  end
-  defp r_left([a, b, c, d]) do
-    [d, a, b, c]
-  end
-
-  defp set_direction(facing) do
-    Enum.reduce_while(@directions, @directions, fn _, [f | _] = acc ->
-      if f == facing, do: {:halt, acc}, else: {:cont, r_right(acc)}
-    end)
-  end
+  def move(r), do: r
 end
